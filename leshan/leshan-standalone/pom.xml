@@ -104,9 +104,8 @@ Contributors:
                 <version>1.5.3</version>
                 <executions>
                     <execution>
-                    <phase>prepare-package</phase> 
                         <goals>
-                            <goal>replace</goal>
+                            <goal>eclipse:eclipse</goal>
                         </goals>
                     </execution>
                 </executions>

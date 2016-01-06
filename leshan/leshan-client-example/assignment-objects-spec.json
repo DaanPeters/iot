@@ -2529,5 +2529,25 @@
         "description": "If present, the type of sensor defined as the UCUM Unit Definition e.g. “Cel” for Temperature in Celcius."
       }
     ]
-  }
+  },
+  {
+    "name": "Addressable Text Display ",
+    "id": 3341,
+    "instancetype": "single",
+    "mandatory": false,
+    "description": "Description: .",
+    "resourcedefs": [
+      {
+        "id": 5527,
+        "name": "Text",
+        "operations": "RW",
+        "instancetype": "single",
+        "mandatory": true,
+        "type": "string",
+        "range": "",
+        "units": "",
+        "description": "description"
+      }
+     ]
+     }
 ]

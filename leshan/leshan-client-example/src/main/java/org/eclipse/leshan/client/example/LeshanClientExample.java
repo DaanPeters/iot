@@ -18,9 +18,12 @@
 
 package org.eclipse.leshan.client.example;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -36,9 +39,10 @@ import java.util.UUID;
 import org.eclipse.leshan.ResponseCode;
 import org.eclipse.leshan.client.californium.LeshanClient;
 import org.eclipse.leshan.client.resource.BaseInstanceEnabler;
-import org.eclipse.leshan.client.resource.LwM2mObjectEnabler;
 import org.eclipse.leshan.client.resource.ObjectEnabler;
 import org.eclipse.leshan.client.resource.ObjectsInitializer;
+import org.eclipse.leshan.core.model.LwM2mModel;
+import org.eclipse.leshan.core.model.ObjectLoader;
 import org.eclipse.leshan.core.model.ResourceModel.Type;
 import org.eclipse.leshan.core.node.LwM2mResource;
 import org.eclipse.leshan.core.request.DeregisterRequest;
@@ -57,11 +61,12 @@ import org.eclipse.leshan.core.response.WriteResponse;
 public class LeshanClientExample {
     private String registrationID;
     private final Location locationInstance = new Location();
+    private final Display displayInstance = new Display();
 
     public static void main(final String[] args) {
         if (args.length != 4 && args.length != 2) {
-            System.out
-                    .println("Usage:\njava -jar target/leshan-client-example-*-SNAPSHOT-jar-with-dependencies.jar [ClientIP] [ClientPort] ServerIP ServerPort");
+            System.out.println(
+                    "Usage:\njava -jar target/leshan-client-example-*-SNAPSHOT-jar-with-dependencies.jar [ClientIP] [ClientPort] ServerIP ServerPort");
         } else {
             if (args.length == 4)
                 new LeshanClientExample(args[0], Integer.parseInt(args[1]), args[2], Integer.parseInt(args[3]));
@@ -74,25 +79,39 @@ public class LeshanClientExample {
             final int serverPort) {
 
         // Initialize object list
-        ObjectsInitializer initializer = new ObjectsInitializer();
+    	File file = new File("./assignment-objects-spec.json");
+    	
+    		System.out.println(file.getAbsolutePath());
+    	
+    	LwM2mModel model = null;
+		try {
+			model = new LwM2mModel(ObjectLoader.loadJsonStream(new FileInputStream(new File("./assignment-objects-spec.json"))));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	System.out.println(model.getObjectModels());
+        ObjectsInitializer initializer = new ObjectsInitializer(model);
 
         initializer.setClassForObject(3, Device.class);
+        initializer.setClassForObject(3341, Display.class);
         initializer.setInstancesForObject(6, locationInstance);
+        initializer.setInstancesForObject(3341, displayInstance);
         List<ObjectEnabler> enablers = initializer.createMandatory();
         enablers.add(initializer.create(6));
+        enablers.add(initializer.create(3341));
 
         // Create client
         final InetSocketAddress clientAddress = new InetSocketAddress(localHostName, localPort);
         final InetSocketAddress serverAddress = new InetSocketAddress(serverHostName, serverPort);
 
-        final LeshanClient client = new LeshanClient(clientAddress, serverAddress, new ArrayList<LwM2mObjectEnabler>(
-                enablers));
+        final LeshanClient client = new LeshanClient(clientAddress, serverAddress, enablers);
 
         // Start the client
         client.start();
 
         // Register to the server
-        final String endpointIdentifier = UUID.randomUUID().toString();
+        final String endpointIdentifier = "Parking-Spot-GroupNo";
         RegisterResponse response = client.send(new RegisterRequest(endpointIdentifier));
         if (response == null) {
             System.out.println("Registration request timeout");
@@ -103,8 +122,8 @@ public class LeshanClientExample {
         if (response.getCode() != ResponseCode.CREATED) {
             // TODO Should we have a error message on response ?
             // System.err.println("\tDevice Registration Error: " + response.getErrorMessage());
-            System.err
-                    .println("If you're having issues connecting to the LWM2M endpoint, try using the DTLS port instead");
+            System.err.println(
+                    "If you're having issues connecting to the LWM2M endpoint, try using the DTLS port instead");
             return;
         }
 
@@ -333,5 +352,41 @@ public class LeshanClientExample {
         public Date getTimestamp() {
             return timestamp;
         }
+    }
+    public static class Display extends BaseInstanceEnabler {
+    	private String text = "";
+    	@Override
+        public ReadResponse read(int resourceid) {
+            System.out.println("Read on Display Resource " + resourceid);
+            switch (resourceid) {
+            case 5527:
+                return ReadResponse.success(resourceid, text);
+            default:
+                return super.read(resourceid);
+            }
+        }
+    	@Override
+        public WriteResponse write(int resourceid, LwM2mResource value) {
+            System.out.println("Write on Device Resource " + resourceid + " value " + value);
+            switch (resourceid) {
+            case 5527:
+            	if(((String)value.getValue()).equals("red")||((String)value.getValue()).equals("orange")||((String)value.getValue()).equals("green")){
+            		text = (String)value.getValue();
+            		try {
+						Process p = Runtime.getRuntime().exec("python ~/"+text+".py");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+            		return WriteResponse.success();
+            	}
+            	return WriteResponse.badRequest("not Allowed");
+                
+            default:
+                return super.write(resourceid, value);
+            }
+        }
+    	
+    
     }
 }
