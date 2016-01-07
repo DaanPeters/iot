@@ -18,12 +18,10 @@
 
 package org.eclipse.leshan.client.example;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -63,6 +61,7 @@ public class LeshanClientExample {
     private String registrationID;
     private final Location locationInstance = new Location();
     private final Display displayInstance = new Display();
+    private final Joystick joystickInstance = new Joystick();
 
     public static void main(final String[] args) {
         if (args.length != 4 && args.length != 2) {
@@ -97,11 +96,15 @@ public class LeshanClientExample {
 
         initializer.setClassForObject(3, Device.class);
         initializer.setClassForObject(3341, Display.class);
+        initializer.setClassForObject(3345, Joystick.class);
+
         initializer.setInstancesForObject(6, locationInstance);
         initializer.setInstancesForObject(3341, displayInstance);
+        initializer.setInstancesForObject(3345, joystickInstance);
         List<ObjectEnabler> enablers = initializer.createMandatory();
         enablers.add(initializer.create(6));
         enablers.add(initializer.create(3341));
+        enablers.add(initializer.create(3345));
 
         // Create client
         final InetSocketAddress clientAddress = new InetSocketAddress(localHostName, localPort);
@@ -376,7 +379,7 @@ public class LeshanClientExample {
 
         @Override
         public WriteResponse write(int resourceid, LwM2mResource value) {
-            System.out.println("Write on Device Resource " + resourceid + " value " + value);
+            System.out.println("Write on Display Resource " + resourceid + " value " + value);
             switch (resourceid) {
             case 5527:
                 if (((String) value.getValue()).equals("red") || ((String) value.getValue()).equals("orange")
@@ -384,20 +387,17 @@ public class LeshanClientExample {
                     text = (String) value.getValue();
                     try {
                         Process p = Runtime.getRuntime().exec("python /home/pi/" + text + ".py");
-                        BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
-
-                        BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-                        System.out.println("Here is the standard output of the command:\n");
-                        String s = null;
-                        while ((s = stdInput.readLine()) != null) {
-                            System.out.println(s);
-                        }
-
-                        // read any errors from the attempted command
-                        System.out.println("Here is the standard error of the command (if any):\n");
-                        while ((s = stdError.readLine()) != null) {
-                            System.out.println(s);
-                        }
+                        /*
+                         * BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                         * 
+                         * BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+                         * System.out.println("Here is the standard output of the command:\n"); String s = null; while
+                         * ((s = stdInput.readLine()) != null) { System.out.println(s); }
+                         * 
+                         * // read any errors from the attempted command System.out.println(
+                         * "Here is the standard error of the command (if any):\n"); while ((s = stdError.readLine()) !=
+                         * null) { System.out.println(s); }
+                         */
 
                     } catch (IOException e) {
                         // TODO Auto-generated catch block
@@ -412,5 +412,31 @@ public class LeshanClientExample {
             }
         }
 
+    }
+
+    public static class Joystick extends BaseInstanceEnabler {
+        int counter = 0;
+        int x = -100;
+        int y = 0;
+        int z = -100;
+
+        @Override
+        public ReadResponse read(int resourceid) {
+            System.out.println("Read on Joystick Resource " + resourceid);
+            switch (resourceid) {
+            case 5500:
+                return ReadResponse.success(resourceid, true);
+            case 5501:
+                return ReadResponse.success(resourceid, counter);
+            case 5702:
+                return ReadResponse.success(resourceid, x);
+            case 5703:
+                return ReadResponse.success(resourceid, y);
+            case 5704:
+                return ReadResponse.success(resourceid, z);
+            default:
+                return super.read(resourceid);
+            }
+        }
     }
 }

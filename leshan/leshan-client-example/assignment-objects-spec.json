@@ -2637,5 +2637,80 @@
         "description": "description"
       }
      ]
-     }
+  },
+  {
+    "name": "Multiple Axis Joystick ",
+    "id": 3345,
+    "instancetype": "single",
+    "mandatory": false,
+    "description": "Description: .",
+    "resourcedefs": [
+      {
+        "id": 5500,
+        "name": "Digital Input State ",
+        "operations": "R",
+        "instancetype": "single",
+        "mandatory": true,
+        "type": "boolean",
+        "range": "",
+        "units": "",
+        "description": "description"
+      },
+      {
+        "id": 5501,
+        "name": "Digital Input Counter",
+        "operations": "R",
+        "instancetype": "single",
+        "mandatory": true,
+        "type": "integer",
+        "range": "",
+        "units": "",
+        "description": "description"
+      },
+      {
+        "id": 5702,
+        "name": "X Value",
+        "operations": "R",
+        "instancetype": "single",
+        "mandatory": true,
+        "type": "integer",
+        "range": "",
+        "units": "",
+        "description": "description"
+      },
+      {
+        "id": 5703,
+        "name": "Y Value",
+        "operations": "R",
+        "instancetype": "single",
+        "mandatory": true,
+        "type": "integer",
+        "range": "",
+        "units": "",
+        "description": "description"
+      },
+      {
+        "id": 5704,
+        "name": "Z Value",
+        "operations": "R",
+        "instancetype": "single",
+        "mandatory": true,
+        "type": "integer",
+        "range": "",
+        "units": "",
+        "description": "description"
+      },
+      {
+        "id": 5750,
+        "name": "Application Type",
+        "operations": "R",
+        "instancetype": "single",
+        "mandatory": true,
+        "type": "string",
+        "range": "",
+        "units": "",
+        "description": "description"
+      }
+    ]
+  }
 ]
