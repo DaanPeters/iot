@@ -18,10 +18,12 @@
 
 package org.eclipse.leshan.client.example;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -34,7 +36,6 @@ import java.util.Scanner;
 import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.UUID;
 
 import org.eclipse.leshan.ResponseCode;
 import org.eclipse.leshan.client.californium.LeshanClient;
@@ -79,18 +80,19 @@ public class LeshanClientExample {
             final int serverPort) {
 
         // Initialize object list
-    	File file = new File("./assignment-objects-spec.json");
-    	
-    		System.out.println(file.getAbsolutePath());
-    	
-    	LwM2mModel model = null;
-		try {
-			model = new LwM2mModel(ObjectLoader.loadJsonStream(new FileInputStream(new File("./assignment-objects-spec.json"))));
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	System.out.println(model.getObjectModels());
+        File file = new File("./assignment-objects-spec.json");
+
+        System.out.println(file.getAbsolutePath());
+
+        LwM2mModel model = null;
+        try {
+            model = new LwM2mModel(
+                    ObjectLoader.loadJsonStream(new FileInputStream(new File("./assignment-objects-spec.json"))));
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        System.out.println(model.getObjectModels());
         ObjectsInitializer initializer = new ObjectsInitializer(model);
 
         initializer.setClassForObject(3, Device.class);
@@ -353,40 +355,62 @@ public class LeshanClientExample {
             return timestamp;
         }
     }
+
     public static class Display extends BaseInstanceEnabler {
-    	private String text = "";
-    	@Override
+        private String text = "";
+
+        @Override
         public ReadResponse read(int resourceid) {
             System.out.println("Read on Display Resource " + resourceid);
             switch (resourceid) {
             case 5527:
                 return ReadResponse.success(resourceid, text);
+            case 5528:
+                return ReadResponse.success(resourceid, 0);
+            case 5529:
+                return ReadResponse.success(resourceid, 0);
             default:
                 return super.read(resourceid);
             }
         }
-    	@Override
+
+        @Override
         public WriteResponse write(int resourceid, LwM2mResource value) {
             System.out.println("Write on Device Resource " + resourceid + " value " + value);
             switch (resourceid) {
             case 5527:
-            	if(((String)value.getValue()).equals("red")||((String)value.getValue()).equals("orange")||((String)value.getValue()).equals("green")){
-            		text = (String)value.getValue();
-            		try {
-						Process p = Runtime.getRuntime().exec("python ~/"+text+".py");
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-            		return WriteResponse.success();
-            	}
-            	return WriteResponse.badRequest("not Allowed");
-                
+                if (((String) value.getValue()).equals("red") || ((String) value.getValue()).equals("orange")
+                        || ((String) value.getValue()).equals("green")) {
+                    text = (String) value.getValue();
+                    try {
+                        Process p = Runtime.getRuntime().exec("python /home/pi/" + text + ".py");
+                        BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+                        BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+                        System.out.println("Here is the standard output of the command:\n");
+                        String s = null;
+                        while ((s = stdInput.readLine()) != null) {
+                            System.out.println(s);
+                        }
+
+                        // read any errors from the attempted command
+                        System.out.println("Here is the standard error of the command (if any):\n");
+                        while ((s = stdError.readLine()) != null) {
+                            System.out.println(s);
+                        }
+
+                    } catch (IOException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                    return WriteResponse.success();
+                }
+                return WriteResponse.badRequest("not Allowed");
+
             default:
                 return super.write(resourceid, value);
             }
         }
-    	
-    
+
     }
 }

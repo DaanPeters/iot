@@ -2547,6 +2547,94 @@
         "range": "",
         "units": "",
         "description": "description"
+      },
+      {
+        "id": 5528,
+        "name": "X Coordinate",
+        "operations": "RW",
+        "instancetype": "single",
+        "mandatory": true,
+        "type": "integer",
+        "range": "",
+        "units": "",
+        "description": "description"
+      },
+      {
+        "id": 5529,
+        "name": "Y Coordinate",
+        "operations": "RW",
+        "instancetype": "single",
+        "mandatory": true,
+        "type": "integer",
+        "range": "",
+        "units": "",
+        "description": "description"
+      },
+      {
+        "id": 5545,
+        "name": "Max X Coordinate",
+        "operations": "RW",
+        "instancetype": "single",
+        "mandatory": true,
+        "type": "integer",
+        "range": "",
+        "units": "",
+        "description": "description"
+      },
+      {
+        "id": 5546,
+        "name": "Max Y Coordinate",
+        "operations": "RW",
+        "instancetype": "single",
+        "mandatory": true,
+        "type": "integer",
+        "range": "",
+        "units": "",
+        "description": "description"
+      },
+      {
+        "id": 5530,
+        "name": "Clear Display",
+        "operations": "E",
+        "instancetype": "single",
+        "mandatory": true,
+        "type": "integer",
+        "range": "",
+        "units": "",
+        "description": "description"
+      },
+      {
+        "id": 5548,
+        "name": "Level",
+        "operations": "RW",
+        "instancetype": "single",
+        "mandatory": true,
+        "type": "float",
+        "range": "",
+        "units": "",
+        "description": "description"
+      },
+      {
+        "id": 5531,
+        "name": "Contrast",
+        "operations": "RW",
+        "instancetype": "single",
+        "mandatory": true,
+        "type": "float",
+        "range": "",
+        "units": "",
+        "description": "description"
+      },
+      {
+        "id": 5750,
+        "name": "Application Type",
+        "operations": "RW",
+        "instancetype": "single",
+        "mandatory": true,
+        "type": "string",
+        "range": "",
+        "units": "",
+        "description": "description"
       }
      ]
      }
