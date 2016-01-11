@@ -156,7 +156,7 @@ public class LeshanClientExample {
         while (true) {
             try {
                 Process p = Runtime.getRuntime().exec("python /home/pi/joystick.py");
-                p.waitFor(5, TimeUnit.SECONDS);
+                p.waitFor(100, TimeUnit.MILLISECONDS);
                 BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
                 BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
