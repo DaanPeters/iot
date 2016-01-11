@@ -35,6 +35,7 @@ import java.util.Random;
 import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.leshan.ResponseCode;
 import org.eclipse.leshan.client.californium.LeshanClient;
@@ -155,6 +156,7 @@ public class LeshanClientExample {
         while (true) {
             try {
                 Process p = Runtime.getRuntime().exec("python /home/pi/joystick.py");
+                p.waitFor(5, TimeUnit.SECONDS);
                 BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
                 BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
@@ -171,6 +173,9 @@ public class LeshanClientExample {
                 }
 
             } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (InterruptedException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
