@@ -18,10 +18,12 @@
 
 package org.eclipse.leshan.client.example;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -151,6 +153,27 @@ public class LeshanClientExample {
         });
 
         // Change the location through the Console
+        try {
+            Process p = Runtime.getRuntime().exec("python /home/pi/joystick.py");
+            BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+            BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+            System.out.println("Here is the standard output of the command:\n");
+            String s = null;
+            while ((s = stdInput.readLine()) != null) {
+                System.out.println(s);
+            }
+
+            // read any errors from the attempted command
+            System.out.println("Here is the standard error of the command (if any):\n");
+            while ((s = stdError.readLine()) != null) {
+                System.out.println(s);
+            }
+
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         Scanner scanner = new Scanner(System.in);
         System.out.println("Press 'w','a','s','d' to change reported Location.");
         while (scanner.hasNext()) {
