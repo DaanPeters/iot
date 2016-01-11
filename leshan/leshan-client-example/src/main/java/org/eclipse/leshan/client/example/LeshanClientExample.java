@@ -67,19 +67,20 @@ public class LeshanClientExample {
     private final ParkingSpot parkingSpotInstance = new ParkingSpot();
 
     public static void main(final String[] args) {
-        if (args.length != 4 && args.length != 2) {
+        if (args.length != 5 && args.length != 3) {
             System.out.println(
-                    "Usage:\njava -jar target/leshan-client-example-*-SNAPSHOT-jar-with-dependencies.jar [ClientIP] [ClientPort] ServerIP ServerPort");
+                    "Usage:\njava -jar target/leshan-client-example-*-SNAPSHOT-jar-with-dependencies.jar [ClientIP] [ClientPort] ServerIP ServerPort groupnr");
         } else {
             if (args.length == 4)
-                new LeshanClientExample(args[0], Integer.parseInt(args[1]), args[2], Integer.parseInt(args[3]));
+                new LeshanClientExample(args[0], Integer.parseInt(args[1]), args[2], Integer.parseInt(args[3]),
+                        Integer.parseInt(args[4]));
             else
-                new LeshanClientExample("0", 0, args[0], Integer.parseInt(args[1]));
+                new LeshanClientExample("0", 0, args[0], Integer.parseInt(args[1]), Integer.parseInt(args[2]));
         }
     }
 
     public LeshanClientExample(final String localHostName, final int localPort, final String serverHostName,
-            final int serverPort) {
+            final int serverPort, final int groupNr) {
 
         // Initialize object list
         File file = new File("./assignment-objects-spec.json");
@@ -121,7 +122,7 @@ public class LeshanClientExample {
         // Start the client
         client.start();
         // Register to the server
-        final String endpointIdentifier = "Parking-Spot-1";
+        final String endpointIdentifier = "Parking-Spot-" + groupNr;
         RegisterResponse response = client.send(new RegisterRequest(endpointIdentifier));
         if (response == null) {
             System.out.println("Registration request timeout");
