@@ -16,6 +16,7 @@
 package org.eclipse.leshan.standalone.servlet;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -57,8 +58,13 @@ import org.eclipse.leshan.standalone.servlet.json.ResponseSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
 
 /**
@@ -104,7 +110,7 @@ public class ClientServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_OK);
             return;
         }
-
+        
         String[] path = StringUtils.split(req.getPathInfo(), '/');
         if (path.length < 1) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid path");
@@ -114,6 +120,31 @@ public class ClientServlet extends HttpServlet {
 
         // /endPoint : get client
         if (path.length == 1) {
+        	if(clientEndpoint.equals("FreeParkingSpots")){
+        		Collection<Client> clients = server.getClientRegistry().allClients();
+        		JsonObject json = new JsonObject();
+        		ArrayList<String> freeclients = new ArrayList();
+        		for(Client c : clients){
+        			
+        			ReadResponse response = server.send(c, new ReadRequest("32700/0/32801"));
+        			if(((LwM2mSingleResource)response.getContent()).getValue().equals("free")){
+        				freeclients.add(c.getEndpoint());
+        			}
+        			System.out.println(c.getEndpoint()+" " +((LwM2mSingleResource)response.getContent()).getValue());
+        		}
+        		json.addProperty("NumFreeSpots", freeclients.size()+"");
+        		JsonArray ids = new JsonArray();
+        		for(String s: freeclients){
+        			ids.add(new JsonPrimitive(s));
+        		}
+        		
+        		json.add("IDs", ids);
+        		Gson gson = new GsonBuilder().setPrettyPrinting().serializeNulls().setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE).create();
+                
+        		resp.setContentType("application/json");
+        		resp.getOutputStream().write(gson.toJson(json).getBytes());
+        		return;
+        	}
             Client client = server.getClientRegistry().get(clientEndpoint);
             if (client != null) {
                 resp.setContentType("application/json");
@@ -191,7 +222,21 @@ public class ClientServlet extends HttpServlet {
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String[] path = StringUtils.split(req.getPathInfo(), '/');
         String clientEndpoint = path[0];
-
+        if(req.getPathInfo().equals("/ReserveSpot")){
+        	Client spot = server.getClientRegistry().get(req.getParameter("SpotID"));
+        	String driver = req.getParameter("DriverID");
+        	if(spot != null){
+        		ReadResponse response = server.send(spot, new ReadRequest("32700/0/32801"));
+            	if(((LwM2mSingleResource)response.getContent()).getValue().equals("free")){
+            		WriteResponse serverresponse = server.send(spot, new WriteRequest(Mode.REPLACE, 32700, 0, 32801, "reserved"));
+            		serverresponse = server.send(spot, new WriteRequest(Mode.REPLACE, 32700, 0, 32802, driver ));
+            		serverresponse = server.send(spot, new WriteRequest(Mode.REPLACE, 3341, 0, 5527, "orange"));
+    				System.out.println(serverresponse.getErrorMessage());
+    			}
+        	}
+        	
+        	
+        }
         // /clients/endPoint/LWRequest/observe : do LightWeight M2M observe request on a given client.
         if (path.length >= 4 && "observe".equals(path[path.length - 1])) {
             try {

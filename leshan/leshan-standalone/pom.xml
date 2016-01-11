@@ -105,7 +105,7 @@ Contributors:
                 <executions>
                     <execution>
                         <goals>
-                            <goal>eclipse:eclipse</goal>
+                            <goal>replace</goal>
                         </goals>
                     </execution>
                 </executions>

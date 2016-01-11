@@ -15,6 +15,9 @@
  *******************************************************************************/
 package org.eclipse.leshan.standalone;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.math.BigInteger;
 import java.security.AlgorithmParameters;
 import java.security.KeyFactory;
@@ -33,9 +36,25 @@ import java.security.spec.KeySpec;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.eclipse.leshan.core.model.LwM2mModel;
+import org.eclipse.leshan.core.model.ObjectLoader;
+import org.eclipse.leshan.core.node.LwM2mNode;
+import org.eclipse.leshan.core.node.LwM2mSingleResource;
+import org.eclipse.leshan.core.observation.Observation;
+import org.eclipse.leshan.core.observation.ObservationListener;
+import org.eclipse.leshan.core.request.ObserveRequest;
+import org.eclipse.leshan.core.request.ReadRequest;
+import org.eclipse.leshan.core.request.WriteRequest;
+import org.eclipse.leshan.core.request.WriteRequest.Mode;
+import org.eclipse.leshan.core.response.ObserveResponse;
+import org.eclipse.leshan.core.response.ReadResponse;
 import org.eclipse.leshan.server.californium.LeshanServerBuilder;
 import org.eclipse.leshan.server.californium.impl.LeshanServer;
+import org.eclipse.leshan.server.client.Client;
+import org.eclipse.leshan.server.client.ClientRegistryListener;
 import org.eclipse.leshan.server.impl.SecurityRegistryImpl;
+import org.eclipse.leshan.server.model.LwM2mModelProvider;
+import org.eclipse.leshan.server.model.StandardModelProvider;
 import org.eclipse.leshan.standalone.servlet.ClientServlet;
 import org.eclipse.leshan.standalone.servlet.EventServlet;
 import org.eclipse.leshan.standalone.servlet.ObjectSpecServlet;
@@ -97,7 +116,22 @@ public class LeshanStandalone {
         } catch (InvalidKeySpecException | NoSuchAlgorithmException | InvalidParameterSpecException e) {
             LOG.warn("Unable to load RPK.", e);
         }
-
+        try {
+            final LwM2mModel model = new LwM2mModel(ObjectLoader.loadJsonStream(new FileInputStream(new File("./assignment-objects-spec.json"))));
+            LwM2mModelProvider objectModelProvider = new StandardModelProvider() ;
+    		builder.setObjectModelProvider(new LwM2mModelProvider() {
+    			
+    			@Override
+    			public LwM2mModel getObjectModel(Client client) {
+    				// TODO Auto-generated method stub
+    				return model;
+    			}
+    		});
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        
         lwServer = builder.build();
         lwServer.start();
 
@@ -137,6 +171,50 @@ public class LeshanStandalone {
         } catch (Exception e) {
             LOG.error("jetty error", e);
         }
+        ClientRegistryListener listener = new ClientRegistryListener(){
+
+			@Override
+			public void registered(final Client client) {
+				ObserveResponse response = lwServer.send(client, new ObserveRequest(3345, 0, 5703));
+				response.getObservation().addListener(new ObservationListener(){
+
+					@Override
+					public void cancelled(Observation observation) {
+						// TODO Auto-generated method stub
+						
+					}
+
+					@Override
+					public void newValue(Observation observation, LwM2mNode value) {
+						if(((Long)((LwM2mSingleResource)value).getValue()) == 100){
+							lwServer.send(client, new WriteRequest(Mode.REPLACE, 32700, 0, 32801, "occupied"));
+							lwServer.send(client, new WriteRequest(Mode.REPLACE, 3341, 0, 5527, "red"));
+						}
+						if(((Long)((LwM2mSingleResource)value).getValue()) == -100){
+							ReadResponse response = lwServer.send(client, new ReadRequest("32700/0/32801"));
+							if(((LwM2mSingleResource)response.getContent()).getValue().equals("occupied")){
+								lwServer.send(client, new WriteRequest(Mode.REPLACE, 32700, 0, 32801, "free"));
+								lwServer.send(client, new WriteRequest(Mode.REPLACE, 3341, 0, 5527, "green"));
+							}
+						}
+					}
+					
+				});
+				
+			}
+
+			@Override
+			public void updated(Client clientUpdated) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void unregistered(Client client) {
+				// TODO Auto-generated method stub
+				
+			}};
+		lwServer.getClientRegistry().addListener(listener);
     }
 
     public void stop() {

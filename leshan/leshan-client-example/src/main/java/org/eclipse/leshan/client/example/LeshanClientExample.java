@@ -160,16 +160,9 @@ public class LeshanClientExample {
                 BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
 
                 BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-                System.out.println("Here is the standard output of the command:\n");
                 String s = null;
                 while ((s = stdInput.readLine()) != null) {
                     joystickInstance.sety(Integer.parseInt(s));
-                }
-
-                // read any errors from the attempted command
-                System.out.println("Here is the standard error of the command (if any):\n");
-                while ((s = stdError.readLine()) != null) {
-                    System.out.println(s);
                 }
 
             } catch (IOException e) {
