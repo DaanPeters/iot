@@ -163,7 +163,7 @@ public class LeshanClientExample {
                 System.out.println("Here is the standard output of the command:\n");
                 String s = null;
                 while ((s = stdInput.readLine()) != null) {
-                    System.out.println(s);
+                    joystickInstance.sety(Integer.parseInt(s));
                 }
 
                 // read any errors from the attempted command
@@ -463,6 +463,11 @@ public class LeshanClientExample {
             default:
                 return super.read(resourceid);
             }
+        }
+
+        public void sety(int y) {
+            this.y = y;
+            fireResourcesChange(5703);
         }
     }
 
