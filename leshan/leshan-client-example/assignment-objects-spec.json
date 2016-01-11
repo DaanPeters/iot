@@ -2712,5 +2712,58 @@
         "description": "description"
       }
     ]
+  },
+  {
+    "name": "Parking Spot",
+    "id": 32700,
+    "instancetype": "single",
+    "mandatory": false,
+    "description": "Description: .",
+    "resourcedefs": [
+      {
+        "id": 32800,
+        "name": "Parking Spot Id",
+        "operations": "R",
+        "instancetype": "single",
+        "mandatory": true,
+        "type": "string",
+        "range": "",
+        "units": "",
+        "description": "description"
+      },
+      {
+        "id": 32801,
+        "name": "Parking Spot State",
+        "operations": "RW",
+        "instancetype": "single",
+        "mandatory": true,
+        "type": "string",
+        "range": "",
+        "units": "",
+        "description": "description"
+      },
+      {
+        "id": 32802,
+        "name": "Vehicle Id",
+        "operations": "RW",
+        "instancetype": "single",
+        "mandatory": true,
+        "type": "string",
+        "range": "",
+        "units": "",
+        "description": "description"
+      },
+      {
+        "id": 32803,
+        "name": "Billing Rate",
+        "operations": "RW",
+        "instancetype": "single",
+        "mandatory": true,
+        "type": "float",
+        "range": "",
+        "units": "",
+        "description": "description"
+      }
+    ]
   }
 ]

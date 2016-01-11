@@ -62,6 +62,7 @@ public class LeshanClientExample {
     private final Location locationInstance = new Location();
     private final Display displayInstance = new Display();
     private final Joystick joystickInstance = new Joystick();
+    private final ParkingSpot parkingSpotInstance = new ParkingSpot();
 
     public static void main(final String[] args) {
         if (args.length != 4 && args.length != 2) {
@@ -97,14 +98,17 @@ public class LeshanClientExample {
         initializer.setClassForObject(3, Device.class);
         initializer.setClassForObject(3341, Display.class);
         initializer.setClassForObject(3345, Joystick.class);
+        initializer.setClassForObject(32700, ParkingSpot.class);
 
         initializer.setInstancesForObject(6, locationInstance);
         initializer.setInstancesForObject(3341, displayInstance);
         initializer.setInstancesForObject(3345, joystickInstance);
+        initializer.setInstancesForObject(32700, parkingSpotInstance);
         List<ObjectEnabler> enablers = initializer.createMandatory();
         enablers.add(initializer.create(6));
         enablers.add(initializer.create(3341));
         enablers.add(initializer.create(3345));
+        enablers.add(initializer.create(32700));
 
         // Create client
         final InetSocketAddress clientAddress = new InetSocketAddress(localHostName, localPort);
@@ -114,9 +118,8 @@ public class LeshanClientExample {
 
         // Start the client
         client.start();
-
         // Register to the server
-        final String endpointIdentifier = "Parking-Spot-GroupNo";
+        final String endpointIdentifier = "Parking-Spot-1";
         RegisterResponse response = client.send(new RegisterRequest(endpointIdentifier));
         if (response == null) {
             System.out.println("Registration request timeout");
@@ -152,7 +155,8 @@ public class LeshanClientExample {
         System.out.println("Press 'w','a','s','d' to change reported Location.");
         while (scanner.hasNext()) {
             String nextMove = scanner.next();
-            locationInstance.moveLocation(nextMove);
+            System.out.println(nextMove);
+            // locationInstance.moveLocation(nextMove);
         }
         scanner.close();
     }
@@ -436,6 +440,56 @@ public class LeshanClientExample {
                 return ReadResponse.success(resourceid, z);
             default:
                 return super.read(resourceid);
+            }
+        }
+    }
+
+    public static class ParkingSpot extends BaseInstanceEnabler {
+        String state = "free";
+        String vehicleId = "";
+        double billingRate = 0.01;
+
+        @Override
+        public ReadResponse read(int resourceid) {
+            System.out.println("Read on ParkingSpot Resource " + resourceid);
+            switch (resourceid) {
+            case 32800:
+                return ReadResponse.success(resourceid, "Parking-Spot-GroupNo");
+            case 32801:
+                return ReadResponse.success(resourceid, state);
+            case 32802:
+                return ReadResponse.success(resourceid, vehicleId);
+            case 32803:
+                return ReadResponse.success(resourceid, billingRate);
+            default:
+                return super.read(resourceid);
+            }
+        }
+
+        @Override
+        public WriteResponse write(int resourceid, LwM2mResource value) {
+            System.out.println("Write on ParkingSpot Resource " + resourceid + " value " + value);
+            switch (resourceid) {
+            case 32801:
+                if (((String) value.getValue()).equals("free") || ((String) value.getValue()).equals("reserved")
+                        || ((String) value.getValue()).equals("occupied")) {
+                    state = (String) value.getValue();
+                    return WriteResponse.success();
+                }
+                return WriteResponse.badRequest("not Allowed");
+            case 32802:
+                vehicleId = (String) value.getValue();
+                return WriteResponse.success();
+            case 32803:
+                System.out.println("test");
+                System.out.println(":" + (double) value.getValue() + ":");
+                if (((Double) value.getValue()) >= 0) {
+                    billingRate = (double) value.getValue();
+                    return WriteResponse.success();
+                }
+                return WriteResponse.badRequest("not Allowed");
+            default:
+                return super.write(resourceid, value);
             }
         }
     }
