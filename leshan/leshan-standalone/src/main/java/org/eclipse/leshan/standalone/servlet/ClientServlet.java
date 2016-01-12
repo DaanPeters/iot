@@ -220,6 +220,7 @@ public class ClientServlet extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    	resp.addHeader("Access-Control-Allow-Origin", "*");
         String[] path = StringUtils.split(req.getPathInfo(), '/');
         String clientEndpoint = path[0];
         if(req.getPathInfo().equals("/ReserveSpot")){
