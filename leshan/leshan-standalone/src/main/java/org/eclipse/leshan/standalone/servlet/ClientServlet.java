@@ -81,10 +81,12 @@ public class ClientServlet extends HttpServlet {
     private final LwM2mServer server;
 
     private final Gson gson;
+    
+    private ArrayList<Bills> openbills;
+    private ArrayList<Bills> closedbills;
 
     public ClientServlet(LwM2mServer server, int securePort) {
         this.server = server;
-
         GsonBuilder gsonBuilder = new GsonBuilder();
         gsonBuilder.registerTypeHierarchyAdapter(Client.class, new ClientSerializer(securePort));
         gsonBuilder.registerTypeHierarchyAdapter(LwM2mResponse.class, new ResponseSerializer());
@@ -92,6 +94,9 @@ public class ClientServlet extends HttpServlet {
         gsonBuilder.registerTypeHierarchyAdapter(LwM2mNode.class, new LwM2mNodeDeserializer());
         gsonBuilder.setDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
         this.gson = gsonBuilder.create();
+        openbills = new ArrayList();
+        closedbills = new ArrayList();
+        
     }
 
     /**
@@ -120,6 +125,42 @@ public class ClientServlet extends HttpServlet {
 
         // /endPoint : get client
         if (path.length == 1) {
+        	if(clientEndpoint.equals("Bills")){
+        		JsonArray jsonbillarray = new JsonArray();
+        		for(Bills b: closedbills){
+        			jsonbillarray.add(b.getJson());
+        		}
+        		JsonObject json = new JsonObject();
+        		json.add("Bills",jsonbillarray);
+        		resp.setContentType("application/json");
+        		resp.getOutputStream().write(gson.toJson(json).getBytes());
+        		return;
+        	}
+        	if(clientEndpoint.equals("Visualise")){
+        		Collection<Client> clients = server.getClientRegistry().allClients();
+        		JsonArray jsonarray = new JsonArray();
+        		JsonArray jsonbillarray = new JsonArray();
+        		for(Client c: clients){
+        			JsonObject json = new JsonObject();
+        			ReadResponse responsestate = server.send(c, new ReadRequest("32700/0/32801"));
+        			ReadResponse responsevehicle = server.send(c, new ReadRequest("32700/0/32802"));
+        			ReadResponse responsebilling = server.send(c, new ReadRequest("32700/0/32803"));
+        			json.addProperty("id", c.getEndpoint());
+        			json.addProperty("state", (String) ((LwM2mSingleResource)responsestate.getContent()).getValue());
+        			json.addProperty("VehicleId", (String) ((LwM2mSingleResource)responsevehicle.getContent()).getValue());
+        			json.addProperty("BillingRate", (Double) ((LwM2mSingleResource)responsebilling.getContent()).getValue());
+        			jsonarray.add(json);
+        		}
+        		for(Bills b: openbills){
+        			jsonbillarray.add(b.getJson());
+        		}
+        		JsonObject json = new JsonObject();
+        		json.add("Spots",jsonarray);
+        		json.add("Bills",jsonbillarray);
+        		resp.setContentType("application/json");
+        		resp.getOutputStream().write(gson.toJson(json).getBytes());
+        		return;
+        	}
         	if(clientEndpoint.equals("FreeParkingSpots")){
         		Collection<Client> clients = server.getClientRegistry().allClients();
         		JsonObject json = new JsonObject();
@@ -432,6 +473,26 @@ public class ClientServlet extends HttpServlet {
             throw new IllegalArgumentException("content type " + req.getContentType()
                     + " not supported for write requests");
         }
+    }
+    
+    public void createBill(String vehicleId, String spotId, double rate){
+    	openbills.add(new Bills(vehicleId,spotId, rate));
+    }
+    public void finish(String spotid){
+    	Bills bill = null;
+    	for(Bills b: openbills){
+    		System.out.println(b.getSpotId());
+    		System.out.println(spotid);
+    		
+    		if(b.getSpotId().equals(spotid)){
+    			bill = b;
+    		}
+    	}
+    	if(bill!=null){
+    		bill.finish();
+    		openbills.remove(bill);
+    		closedbills.add(bill);
+    	}
     }
 
 }

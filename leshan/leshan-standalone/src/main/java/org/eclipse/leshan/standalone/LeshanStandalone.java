@@ -154,9 +154,9 @@ public class LeshanStandalone {
         EventServlet eventServlet = new EventServlet(lwServer, lwServer.getSecureAddress().getPort());
         ServletHolder eventServletHolder = new ServletHolder(eventServlet);
         root.addServlet(eventServletHolder, "/event/*");
-
-        ServletHolder clientServletHolder = new ServletHolder(new ClientServlet(lwServer, lwServer.getSecureAddress()
-                .getPort()));
+        final ClientServlet clientServlet = new ClientServlet(lwServer, lwServer.getSecureAddress()
+                .getPort());
+        ServletHolder clientServletHolder = new ServletHolder(clientServlet);
         root.addServlet(clientServletHolder, "/api/clients/*");
 
         ServletHolder securityServletHolder = new ServletHolder(new SecurityServlet(lwServer.getSecurityRegistry()));
@@ -189,12 +189,20 @@ public class LeshanStandalone {
 						if(((Long)((LwM2mSingleResource)value).getValue()) == 100){
 							lwServer.send(client, new WriteRequest(Mode.REPLACE, 32700, 0, 32801, "occupied"));
 							lwServer.send(client, new WriteRequest(Mode.REPLACE, 3341, 0, 5527, "red"));
+							ReadResponse responsevehicle = lwServer.send(client, new ReadRequest("32700/0/32802"));
+							String vehicleId = (String) ((LwM2mSingleResource)responsevehicle.getContent()).getValue();
+							ReadResponse responserate = lwServer.send(client, new ReadRequest("32700/0/32803"));
+							double rate = (double) ((LwM2mSingleResource)responserate.getContent()).getValue();
+							clientServlet.createBill(vehicleId, client.getEndpoint(),rate );
+		        			
 						}
 						if(((Long)((LwM2mSingleResource)value).getValue()) == -100){
 							ReadResponse response = lwServer.send(client, new ReadRequest("32700/0/32801"));
 							if(((LwM2mSingleResource)response.getContent()).getValue().equals("occupied")){
 								lwServer.send(client, new WriteRequest(Mode.REPLACE, 32700, 0, 32801, "free"));
 								lwServer.send(client, new WriteRequest(Mode.REPLACE, 3341, 0, 5527, "green"));
+								clientServlet.finish(client.getEndpoint());
+								lwServer.send(client, new WriteRequest(Mode.REPLACE, 32700, 0, 32802, ""));
 							}
 						}
 					}

@@ -64,7 +64,7 @@ public class LeshanClientExample {
     private final Location locationInstance = new Location();
     private final Display displayInstance = new Display();
     private final Joystick joystickInstance = new Joystick();
-    private final ParkingSpot parkingSpotInstance = new ParkingSpot();
+    private final ParkingSpot parkingSpotInstance;
 
     public static void main(final String[] args) {
         if (args.length != 5 && args.length != 3) {
@@ -82,6 +82,7 @@ public class LeshanClientExample {
     public LeshanClientExample(final String localHostName, final int localPort, final String serverHostName,
             final int serverPort, final int groupNr) {
 
+        parkingSpotInstance = new ParkingSpot(groupNr);
         // Initialize object list
         File file = new File("./assignment-objects-spec.json");
 
@@ -469,13 +470,23 @@ public class LeshanClientExample {
         String state = "free";
         String vehicleId = "";
         double billingRate = 0.01;
+        private int groupNr;
+
+        public ParkingSpot() {
+            super();
+        }
+
+        public ParkingSpot(int groupNr) {
+            super();
+            this.groupNr = groupNr;
+        }
 
         @Override
         public ReadResponse read(int resourceid) {
             System.out.println("Read on ParkingSpot Resource " + resourceid);
             switch (resourceid) {
             case 32800:
-                return ReadResponse.success(resourceid, "Parking-Spot-GroupNo");
+                return ReadResponse.success(resourceid, "Parking-Spot-" + groupNr);
             case 32801:
                 return ReadResponse.success(resourceid, state);
             case 32802:
